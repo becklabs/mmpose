@@ -81,6 +81,18 @@ def convert_keypoint_definition(keypoints, pose_det_dataset,
 
             keypoints_new[:, [1, 2, 3, 4, 5, 6, 11, 12, 13, 14, 15, 16]] = \
                 keypoints[:, [7, 9, 11, 6, 8, 10, 0, 2, 4, 1, 3, 5]]
+        elif pose_det_dataset in ['halpe']:
+            # pelvis (root) is in the middle of l_hip and r_hip
+            keypoints_new[:, 0] = (keypoints[:, 11] + keypoints[:, 12]) / 2
+            # thorax is in the middle of l_shoulder and r_shoulder
+            keypoints_new[:, 8] = (keypoints[:, 5] + keypoints[:, 6]) / 2
+            # spine is in the middle of thorax and pelvis
+            keypoints_new[:, 7] = (keypoints_new[:, 0] + keypoints_new[:, 8]) / 2
+            # head is taken as the 'Head' keypoint from Halpe
+            keypoints_new[:, 10] = keypoints[:, 17]
+            # rearrange other keypoints to match h36m dataset
+            keypoints_new[:, [1, 2, 3, 4, 5, 6, 9, 11, 12, 13, 14, 15, 16]] = \
+                keypoints[:, [12, 14, 16, 11, 13, 15, 0, 5, 7, 9, 6, 8, 10]]
         else:
             raise NotImplementedError(
                 f'unsupported conversion between {pose_lift_dataset} and '

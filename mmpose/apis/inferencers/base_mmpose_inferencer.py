@@ -536,81 +536,83 @@ class BaseMMPoseInferencer(BaseInferencer):
                 logger='current',
                 level=logging.INFO)
 
-    def postprocess(
-        self,
-        preds: List[PoseDataSample],
-        visualization: List[np.ndarray],
-        return_datasample=None,
-        return_datasamples=False,
-        pred_out_dir: str = '',
-    ) -> dict:
-        """Process the predictions and visualization results from ``forward``
-        and ``visualize``.
+    # def postprocess(
+    #     self,
+    #     preds: List[PoseDataSample],
+    #     visualization: List[np.ndarray],
+    #     return_datasample=None,
+    #     return_datasamples=False,
+    #     pred_out_dir: str = '',
+    # ) -> dict:
+    #     """Process the predictions and visualization results from ``forward``
+    #     and ``visualize``.
 
-        This method should be responsible for the following tasks:
+    #     This method should be responsible for the following tasks:
 
-        1. Convert datasamples into a json-serializable dict if needed.
-        2. Pack the predictions and visualization results and return them.
-        3. Dump or log the predictions.
+    #     1. Convert datasamples into a json-serializable dict if needed.
+    #     2. Pack the predictions and visualization results and return them.
+    #     3. Dump or log the predictions.
 
-        Args:
-            preds (List[Dict]): Predictions of the model.
-            visualization (np.ndarray): Visualized predictions.
-            return_datasamples (bool): Whether to return results as
-                datasamples. Defaults to False.
-            pred_out_dir (str): Directory to save the inference results w/o
-                visualization. If left as empty, no file will be saved.
-                Defaults to ''.
+    #     Args:
+    #         preds (List[Dict]): Predictions of the model.
+    #         visualization (np.ndarray): Visualized predictions.
+    #         return_datasamples (bool): Whether to return results as
+    #             datasamples. Defaults to False.
+    #         pred_out_dir (str): Directory to save the inference results w/o
+    #             visualization. If left as empty, no file will be saved.
+    #             Defaults to ''.
 
-        Returns:
-            dict: Inference and visualization results with key ``predictions``
-            and ``visualization``
+    #     Returns:
+    #         dict: Inference and visualization results with key ``predictions``
+    #         and ``visualization``
 
-            - ``visualization (Any)``: Returned by :meth:`visualize`
-            - ``predictions`` (dict or DataSample): Returned by
-              :meth:`forward` and processed in :meth:`postprocess`.
-              If ``return_datasamples=False``, it usually should be a
-              json-serializable dict containing only basic data elements such
-              as strings and numbers.
-        """
-        if return_datasample is not None:
-            print_log(
-                'The `return_datasample` argument is deprecated '
-                'and will be removed in future versions. Please '
-                'use `return_datasamples`.',
-                logger='current',
-                level=logging.WARNING)
-            return_datasamples = return_datasample
+    #         - ``visualization (Any)``: Returned by :meth:`visualize`
+    #         - ``predictions`` (dict or DataSample): Returned by
+    #           :meth:`forward` and processed in :meth:`postprocess`.
+    #           If ``return_datasamples=False``, it usually should be a
+    #           json-serializable dict containing only basic data elements such
+    #           as strings and numbers.
+    #     """
+    #     for i in range(100):
+    #         print("DIDNT OVERRIDE")
+    #     if return_datasample is not None:
+    #         print_log(
+    #             'The `return_datasample` argument is deprecated '
+    #             'and will be removed in future versions. Please '
+    #             'use `return_datasamples`.',
+    #             logger='current',
+    #             level=logging.WARNING)
+    #         return_datasamples = return_datasample
 
-        result_dict = defaultdict(list)
+    #     result_dict = defaultdict(list)
 
-        result_dict['visualization'] = visualization
-        for pred in preds:
-            if not return_datasamples:
-                # convert datasamples to list of instance predictions
-                pred = split_instances(pred.pred_instances)
-            result_dict['predictions'].append(pred)
+    #     result_dict['visualization'] = visualization
+    #     for pred in preds:
+    #         if not return_datasamples:
+    #             # convert datasamples to list of instance predictions
+    #             pred = split_instances(pred.pred_instances)
+    #         result_dict['predictions'].append(pred)
 
-        if pred_out_dir != '':
-            for pred, data_sample in zip(result_dict['predictions'], preds):
-                if self._video_input:
-                    # For video or webcam input, predictions for each frame
-                    # are gathered in the 'predictions' key of 'video_info'
-                    # dictionary. All frame predictions are then stored into
-                    # a single file after processing all frames.
-                    self.video_info['predictions'].append(pred)
-                else:
-                    # For non-video inputs, predictions are stored in separate
-                    # JSON files. The filename is determined by the basename
-                    # of the input image path with a '.json' extension. The
-                    # predictions are then dumped into this file.
-                    fname = os.path.splitext(
-                        os.path.basename(
-                            data_sample.metainfo['img_path']))[0] + '.json'
-                    mmengine.dump(
-                        pred, join_path(pred_out_dir, fname), indent='  ')
+    #     if pred_out_dir != '':
+    #         for pred, data_sample in zip(result_dict['predictions'], preds):
+    #             if self._video_input:
+    #                 # For video or webcam input, predictions for each frame
+    #                 # are gathered in the 'predictions' key of 'video_info'
+    #                 # dictionary. All frame predictions are then stored into
+    #                 # a single file after processing all frames.
+    #                 self.video_info['predictions'].append(pred)
+    #             else:
+    #                 # For non-video inputs, predictions are stored in separate
+    #                 # JSON files. The filename is determined by the basename
+    #                 # of the input image path with a '.json' extension. The
+    #                 # predictions are then dumped into this file.
+    #                 fname = os.path.splitext(
+    #                     os.path.basename(
+    #                         data_sample.metainfo['img_path']))[0] + '.json'
+    #                 mmengine.dump(
+    #                     pred, join_path(pred_out_dir, fname), indent='  ')
 
-        return result_dict
+    #     return result_dict
 
     def _finalize_video_processing(
         self,
